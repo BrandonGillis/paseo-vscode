@@ -1,0 +1,41 @@
+{
+  "name": "paseo-vscode",
+  "version": "0.1.0",
+  "description": "Run VS Code (code-server) in a Paseo tab, with Open VSX extensions and dev containers.",
+  "license": "MIT",
+  "private": true,
+  "keywords": [
+    "paseo",
+    "paseo-plugin",
+    "vscode",
+    "code-server",
+    "editor",
+    "open-vsx"
+  ],
+  "files": [
+    "paseo-plugin.json",
+    "OVERVIEW.md",
+    "README.md",
+    "LICENSE",
+    "index.client.tsx",
+    "index.server.ts",
+    "client/",
+    "server/",
+    "shared/",
+    "docs/"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.15.0",
+    "@types/react": "~19.2.0",
+    "@types/node": "^22.20.3",
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BrandonGillis/paseo-vscode.git"
+  }
+}

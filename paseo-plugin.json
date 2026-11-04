@@ -1,0 +1,9 @@
+{
+  "id": "paseo-vscode",
+  "name": "VS Code",
+  "description": "Run VS Code in a Paseo tab, with Open VSX extensions and dev containers.",
+  "media": ["docs/screenshot.png"],
+  "requirements": {
+    "paseo": ">=0.15.0"
+  }
+}
