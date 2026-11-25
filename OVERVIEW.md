@@ -20,7 +20,9 @@ A workspace with a devcontainer.json asks once whether to open in its dev contai
 
 ## Requirements and privacy
 
-Needs Paseo 0.15.0 or later and a Linux or macOS daemon host (x64 or arm64) on the same machine as the Paseo app. Works on desktop and web; the mobile apps are not supported.
+Needs Paseo 0.15.0 or later and a Linux or macOS daemon host (x64 or arm64). Works on desktop and web; the mobile apps are not supported.
+
+Out of the box VS Code is served on 127.0.0.1 of the daemon host, so it opens only when the Paseo app runs on that machine. For a remote daemon, put a reverse proxy with HTTPS in front of it and set the listen address, a fixed port and the public URL under Settings, Plugins, VS Code, Remote access. Anyone who can reach that address and knows the secret in the URL can use VS Code as your user, so expose it only through the reverse proxy.
 
 code-server runs on the daemon host, on a socket only your user can open. Paseo reaches it through a local address holding a secret created at each start. VS Code's telemetry and update checks are turned off. VS Code contacts Open VSX when you browse or install extensions, and extensions you install may send their own data, as in VS Code.
 
