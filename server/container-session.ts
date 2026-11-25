@@ -8,6 +8,7 @@ import { checkDocker, docker, ensureCli, exec, execAndWait, isCliInstalled, isRu
 import { BUILTIN_EXTENSIONS_DIR, CODE_SERVER_VERSION, DATA_DIR, SERVER_DIR } from "./install";
 import { ensureCodeServer } from "./local-session";
 import { stopGroup, waitForListening } from "./processes";
+import { loadNetwork } from "./network";
 import { startProxy, type Proxy } from "./proxy";
 import { startRelay, type Relay } from "./relay";
 import { Session } from "./session";
@@ -165,6 +166,7 @@ export class ContainerSession extends Session {
     let upstream: string | null = null;
     const portFile = path.join(DATA_DIR, "containers", `${this.key}.port`);
     const preferredPort = Number((await readFile(portFile, "utf8").catch(() => "")).trim()) || undefined;
+    await loadNetwork();
     const proxy = await startProxy({
       preferredPort,
       secret: randomBytes(24).toString("hex"),

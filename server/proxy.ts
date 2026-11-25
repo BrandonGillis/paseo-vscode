@@ -3,6 +3,7 @@ import net from "node:net";
 import { APPEARANCE_PARAM, type PaseoAppearance } from "../shared/appearance";
 import type { Bridge } from "./bridge";
 import { chromeColors, parseAppearance, workbenchDefaults } from "./defaults";
+import { browserUrl, network } from "./network";
 import { READY_PATH, READY_SCRIPT } from "./ready-script";
 
 /*
@@ -11,7 +12,8 @@ import { READY_PATH, READY_SCRIPT } from "./ready-script";
  * code-server listens on a Unix socket that only this user can open (mode 600) and runs
  * with --auth none: the socket's permissions are the access control. Paseo's iframe cannot
  * talk to a socket, so this proxy:
- *   - listens on 127.0.0.1 only;
+ *   - listens on 127.0.0.1 only, unless the listenHost setting says otherwise (a reverse
+ *     proxy on another machine; see network.ts);
  *   - accepts only paths under /<secret>/, a random value made at each start, and strips it
  *     before forwarding (code-server uses relative URLs, so it works under any prefix):
  *     the URL itself is the credential and nothing else is reachable;
@@ -21,7 +23,7 @@ import { READY_PATH, READY_SCRIPT } from "./ready-script";
 
 export interface Proxy {
   port: number;
-  /** http://127.0.0.1:<port>/<secret>/ */
+  /** The URL the browser opens: http://127.0.0.1:<port>/<secret>/, or the public URL. */
   baseUrl: string;
   close(): void;
 }
@@ -88,6 +90,8 @@ export function startProxy(options: {
   bridge: Bridge;
   /** Port used last time, kept when free (see below). */
   preferredPort?: number;
+  /** Fail instead of falling back to another port when preferredPort is taken. */
+  strictPort?: boolean;
   /** More configuration defaults (a dev container's settings), below Paseo's. */
   extraDefaults?: () => Record<string, unknown>;
   /** Replaces code-server's "code-server Web" remote indicator. */
@@ -184,7 +188,7 @@ export function startProxy(options: {
     new Promise<number>((resolve, reject) => {
       const onError = (error: Error) => reject(error);
       server.once("error", onError);
-      server.listen(port, "127.0.0.1", () => {
+      server.listen(port, network().listenHost, () => {
         server.off("error", onError);
         const address = server.address();
         if (!address || typeof address === "string") return reject(new Error("Proxy has no port"));
@@ -195,9 +199,10 @@ export function startProxy(options: {
     let port: number;
     try {
       port = options.preferredPort ? await listen(options.preferredPort) : await listen(0);
-    } catch {
+    } catch (error) {
+      if (options.strictPort) throw new Error(`VS Code proxy cannot listen on ${network().listenHost}:${options.preferredPort}: ${String(error)}`);
       port = await listen(0);
     }
-    return { port, baseUrl: `http://127.0.0.1:${port}/${secret}/`, close: () => server.close() };
+    return { port, baseUrl: browserUrl(port, secret), close: () => server.close() };
   })();
 }

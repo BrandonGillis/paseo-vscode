@@ -3,6 +3,7 @@ import { VSCodeHost } from "./server/vscode";
 import { approveDownloadsRpc, folderTabsRpc, leaseRpc, openFolderTabRpc, openFileRpc, openRpc, rebuildRpc, setModeRpc, targetRpc } from "./shared/rpc";
 import { settings } from "./shared/settings";
 import { approve } from "./server/downloads";
+import { setNetworkLoader } from "./server/network";
 
 export default function contribute(server: PluginServerContext) {
   const config = server.registerSettings(settings);
@@ -10,6 +11,12 @@ export default function contribute(server: PluginServerContext) {
     const state = await config.read();
     return state.status === "ready" ? state.values.extensions : [];
   };
+  setNetworkLoader(async () => {
+    const state = await config.read();
+    if (state.status !== "ready") return {};
+    const { listenHost, port, publicUrl } = state.values;
+    return { listenHost, port, publicUrl };
+  });
   const host = new VSCodeHost(extensions);
   // Extensions added in the settings are installed right away (VS Code shows them once its
   // window reloads); removing one does not uninstall it.
