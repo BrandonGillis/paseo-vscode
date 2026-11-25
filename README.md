@@ -17,7 +17,7 @@ Built on [code-server](https://github.com/coder/code-server), with extensions fr
 ## Requirements
 
 - Paseo 0.15.0 or later, on desktop or web.
-- A Linux or macOS daemon host, on the same machine as the Paseo app.
+- A Linux or macOS daemon host. On the same machine as the Paseo app it works as is; from another machine, see [Remote access](docs/remote-access.md).
 - Docker, for dev containers.
 
 ## Install
@@ -35,6 +35,10 @@ Install extensions from VS Code, or list them in **Settings → Plugins → VS C
 ## Dev containers
 
 If the workspace has a `devcontainer.json`, the plugin asks once whether to open it in the container or locally. Use VS Code's remote indicator (bottom left) or the command palette to switch or rebuild later.
+
+## Remote access
+
+VS Code is served on `http://127.0.0.1` of the daemon host, so out of the box it only opens when the Paseo app runs on that machine. To use it with a remote daemon, put a TLS reverse proxy in front of it and set **Settings → Plugins → VS Code → Remote access**: listen address, fixed port and public URL. See [docs/remote-access.md](docs/remote-access.md) for the settings, an nginx example, dev containers and security notes.
 
 ## Data
 

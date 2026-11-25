@@ -10,6 +10,7 @@ import { installBridgeExtension } from "./bridge-extension";
 import { assertApproved } from "./downloads";
 import { CONFIG_FILE, ensureExtensions, EXTENSIONS_DIR, SERVER_DATA_DIR } from "./extensions";
 import { BUILTIN_EXTENSIONS_DIR, DATA_DIR, install, isInstalled, SERVER_BIN } from "./install";
+import { loadNetwork, loopbackHost } from "./network";
 import { killGroup, stopGroup, waitForListening } from "./processes";
 import { startProxy, type Proxy } from "./proxy";
 import { Session } from "./session";
@@ -110,9 +111,11 @@ export class LocalSession extends Session {
 
     let upstream: string | null = null;
     const portFile = path.join(DATA_DIR, "proxy-port");
-    const preferredPort = Number((await readFile(portFile, "utf8").catch(() => "")).trim()) || undefined;
+    const { port: fixedPort } = await loadNetwork();
+    const preferredPort = fixedPort || Number((await readFile(portFile, "utf8").catch(() => "")).trim()) || undefined;
     const proxy = await startProxy({
       preferredPort,
+      strictPort: !!fixedPort,
       secret,
       upstreamSocket: () => upstream,
       bridge: this.bridge,
@@ -142,7 +145,7 @@ export class LocalSession extends Session {
         env: {
           ...process.env,
           // Read by the Paseo Bridge extension in each window's extension host.
-          PASEO_BRIDGE_URL: `http://127.0.0.1:${proxy.port}${BRIDGE_PATH}`,
+          PASEO_BRIDGE_URL: `http://${loopbackHost()}:${proxy.port}${BRIDGE_PATH}`,
           PASEO_BRIDGE_TOKEN: this.bridge.token,
           PASEO_MODE: "local",
         },
@@ -160,7 +163,7 @@ export class LocalSession extends Session {
     await waitForListening(child);
     if (cancelled()) return; // teardown() stops the child it now owns
     upstream = socketPath;
-    this.setReady(`http://127.0.0.1:${proxy.port}/${secret}/`);
+    this.setReady(proxy.baseUrl);
 
     child.once("exit", () => {
       if (this.child !== child) return;
